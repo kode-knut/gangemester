@@ -1,14 +1,14 @@
 // Konfigurasjon av dyr for hver gangetabell
 const tableConfig = {
-    1: { animal: '🐶', name: '1-gangen' },
+    1: { animal: '🐨', name: '1-gangen' },
     2: { animal: '🐱', name: '2-gangen' },
-    3: { animal: '🐰', name: '3-gangen' },
-    4: { animal: '🦊', name: '4-gangen' },
+    3: { animal: '🐯', name: '3-gangen' },
+    4: { animal: '🦁', name: '4-gangen' },
     5: { animal: '🐻', name: '5-gangen' },
     6: { animal: '🐼', name: '6-gangen' },
-    7: { animal: '🐨', name: '7-gangen' },
-    8: { animal: '🦁', name: '8-gangen' },
-    9: { animal: '🐯', name: '9-gangen' },
+    7: { animal: '🐶', name: '7-gangen' },
+    8: { animal: '🦊', name: '8-gangen' },
+    9: { animal: '🐰', name: '9-gangen' },
     10: { animal: '🦒', name: '10-gangen' }
 };
 
@@ -26,14 +26,38 @@ const perfectMessages = [
 // Fremgang - lagre hvilke tabeller som er fullført med medalje
 function getProgress() {
     const saved = localStorage.getItem('gangemester_progress');
-    return saved ? JSON.parse(saved) : {};
+    const progress = saved ? JSON.parse(saved) : {};
+
+    // Migrer gammel struktur (string) til ny struktur (object med modes)
+    let needsMigration = false;
+    for (const table in progress) {
+        if (typeof progress[table] === 'string') {
+            const oldMedal = progress[table];
+            progress[table] = { ascending: oldMedal, mixed: null };
+            needsMigration = true;
+        }
+    }
+
+    // Lagre migrert data
+    if (needsMigration) {
+        localStorage.setItem('gangemester_progress', JSON.stringify(progress));
+    }
+
+    return progress;
 }
 
-function saveProgress(table, medal) {
+function saveProgress(table, medal, mode) {
     const progress = getProgress();
+
+    // Initialiser tabell hvis den ikke finnes, eller konverter gammel struktur
+    if (!progress[table] || typeof progress[table] === 'string') {
+        progress[table] = { ascending: null, mixed: null };
+    }
+
     // Kun lagre hvis ny medalje er bedre enn eksisterende
-    if (!progress[table] || getMedalValue(medal) > getMedalValue(progress[table])) {
-        progress[table] = medal;
+    const currentMedal = progress[table][mode];
+    if (!currentMedal || getMedalValue(medal) > getMedalValue(currentMedal)) {
+        progress[table][mode] = medal;
         localStorage.setItem('gangemester_progress', JSON.stringify(progress));
     }
 }
@@ -45,13 +69,46 @@ function getMedalValue(medal) {
     return 0;
 }
 
+// Rekorttider - lagre beste tid per tabell
+function getBestTimes() {
+    const saved = localStorage.getItem('gangemester_best_times');
+    return saved ? JSON.parse(saved) : {};
+}
+
+function saveBestTime(key, time) {
+    const bestTimes = getBestTimes();
+    const hadPreviousTime = bestTimes[key] !== undefined;
+
+    if (!bestTimes[key] || time < bestTimes[key]) {
+        bestTimes[key] = time;
+        localStorage.setItem('gangemester_best_times', JSON.stringify(bestTimes));
+        return hadPreviousTime; // Ny rekord kun hvis det fantes tidligere tid
+    }
+    return false;
+}
+
+function getTimeKey(tables, questionCount, mode) {
+    // Generer unik nøkkel for denne quizen med modus
+    let baseKey;
+    if (questionCount === 100) {
+        baseKey = 'full-test';
+    } else if (questionCount === 50) {
+        baseKey = tables.length > 1 ? `group-${tables[0]}-${tables[tables.length - 1]}` : `table-${tables[0]}`;
+    } else {
+        baseKey = `table-${tables[0]}`;
+    }
+    return `${baseKey}-${mode}`;
+}
+
 function updateMedalDisplay() {
     const progress = getProgress();
     numberCards.forEach(card => {
         const table = card.dataset.table;
         const medalEl = card.querySelector('.card-medal');
-        if (progress[table]) {
-            medalEl.textContent = progress[table];
+
+        // Vis kun medalje for valgt modus
+        if (progress[table] && progress[table][currentMode]) {
+            medalEl.textContent = progress[table][currentMode];
             medalEl.classList.add('show');
         } else {
             medalEl.classList.remove('show');
@@ -93,6 +150,8 @@ const scorePercent = document.getElementById('score-percent');
 const timeStat = document.getElementById('time-stat');
 const medalIcon = document.getElementById('medal-icon');
 const medalText = document.getElementById('medal-text');
+const recordStat = document.getElementById('record-stat');
+const recordText = document.getElementById('record-text');
 const retryBtn = document.getElementById('retry-btn');
 const menuBtn = document.getElementById('menu-btn');
 
@@ -102,6 +161,7 @@ tabs.forEach(tab => {
         tabs.forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
         currentMode = tab.dataset.mode;
+        updateMedalDisplay(); // Oppdater medaljer når modus endres
     });
 });
 
@@ -238,23 +298,40 @@ function startFullTest() {
 function generateQuestions(tables, count) {
     const questions = [];
 
-    for (let i = 0; i < count; i++) {
-        const table = tables[Math.floor(Math.random() * tables.length)];
-        let multiplier;
+    if (currentMode === 'ascending') {
+        // Stigende: 1, 2, 3, ... 10 (repeterer hvis mer enn 10)
+        for (let i = 0; i < count; i++) {
+            const table = tables[Math.floor(Math.random() * tables.length)];
+            const multiplier = (i % 10) + 1;
 
-        if (currentMode === 'ascending') {
-            // Stigende: 1, 2, 3, ... 10
-            multiplier = (i % 10) + 1;
-        } else {
-            // Blandet: tilfeldig
-            multiplier = Math.floor(Math.random() * 10) + 1;
+            questions.push({
+                table: table,
+                multiplier: multiplier,
+                answer: table * multiplier
+            });
+        }
+    } else {
+        // Blandet: generer alle mulige kombinasjoner, bland og velg unike
+        const allPossible = [];
+
+        tables.forEach(table => {
+            for (let multiplier = 1; multiplier <= 10; multiplier++) {
+                allPossible.push({
+                    table: table,
+                    multiplier: multiplier,
+                    answer: table * multiplier
+                });
+            }
+        });
+
+        // Bland alle kombinasjoner
+        for (let i = allPossible.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [allPossible[i], allPossible[j]] = [allPossible[j], allPossible[i]];
         }
 
-        questions.push({
-            table: table,
-            multiplier: multiplier,
-            answer: table * multiplier
-        });
+        // Velg de første 'count' spørsmålene (garantert unike)
+        return allPossible.slice(0, count);
     }
 
     return questions;
@@ -297,6 +374,13 @@ function showResults() {
     const percentage = Math.round((correctAnswers / totalQuestions) * 100);
     const elapsedTime = Math.round((Date.now() - startTime) / 1000);
     const isPerfect = correctAnswers === totalQuestions;
+
+    // Sjekk om det er rekorttid
+    let isNewRecord = false;
+    if (isPerfect) {
+        const timeKey = getTimeKey(selectedTables, totalQuestions, currentMode);
+        isNewRecord = saveBestTime(timeKey, elapsedTime);
+    }
 
     // Oppdater resultattekster
     scoreBig.textContent = `${correctAnswers}/${totalQuestions}`;
@@ -352,12 +436,21 @@ function showResults() {
         medalIcon.textContent = medal;
         medalText.textContent = medalName;
 
-        // Lagre fremgang hvis enkelt tabell
-        if (selectedTables.length === 1) {
-            saveProgress(selectedTables[0], medal);
+        // Vis rekorttid hvis aktuelt
+        if (isNewRecord) {
+            recordStat.style.display = 'block';
+            recordStat.classList.add('pulse');
+            recordText.textContent = '🏆 Rekorttid!';
+        } else {
+            recordStat.style.display = 'none';
         }
 
-        // Knapper: menu-btn er primary (grønn), retry-btn er secondary (grå)
+        // Lagre fremgang hvis enkelt tabell
+        if (selectedTables.length === 1) {
+            saveProgress(selectedTables[0], medal, currentMode);
+        }
+
+        // Knapper: menu-btn er primary (blå), retry-btn er secondary (grå)
         retryBtn.classList.remove('primary');
         menuBtn.classList.add('primary');
 
@@ -370,8 +463,9 @@ function showResults() {
         scoreCard.className = 'score-card not-perfect';
         medalIcon.textContent = '';
         medalText.textContent = '';
+        recordStat.style.display = 'none';
 
-        // Knapper: retry-btn er primary (grønn), menu-btn er secondary (grå)
+        // Knapper: retry-btn er primary (blå), menu-btn er secondary (grå)
         retryBtn.classList.add('primary');
         menuBtn.classList.remove('primary');
     }
@@ -380,22 +474,32 @@ function showResults() {
 }
 
 function createConfetti() {
-    const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#6c5ce7', '#a29bfe', '#fd79a8', '#fdcb6e'];
-    const confettiCount = 50;
+    const colors = ['#FFD700', '#4285F4', '#34A853', '#EA4335', '#FBBC04', '#FF6B9D', '#C369E8', '#00BFA5'];
+    const confettiCount = 100;
 
     for (let i = 0; i < confettiCount; i++) {
         setTimeout(() => {
             const confetti = document.createElement('div');
             confetti.className = 'confetti';
             confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.top = '-20px';
             confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
-            confetti.style.animationDelay = Math.random() * 0.5 + 's';
-            confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            confetti.style.width = (Math.random() * 8 + 6) + 'px';
+            confetti.style.height = (Math.random() * 8 + 6) + 'px';
+            confetti.style.opacity = Math.random() * 0.5 + 0.5;
+            confetti.style.animationDelay = Math.random() * 0.3 + 's';
+            confetti.style.animationDuration = (Math.random() * 2 + 2.5) + 's';
+
+            // Tilfeldig form
+            if (Math.random() > 0.5) {
+                confetti.style.borderRadius = '50%';
+            }
+
             document.body.appendChild(confetti);
 
             // Fjern confetti etter animasjon
-            setTimeout(() => confetti.remove(), 3000);
-        }, i * 30);
+            setTimeout(() => confetti.remove(), 5000);
+        }, i * 20);
     }
 }
 

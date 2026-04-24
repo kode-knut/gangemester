@@ -6,26 +6,30 @@
     <meta name="description" content="Øv på gangetabellen">
     <meta name="theme-color" content="#4285F4">
     <title>Gangemester</title>
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="./manifest.json">
     <link rel="stylesheet" href="styles.css">
-    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="icon.svg">
 </head>
 <body>
     <!-- Splash Screen -->
     <div id="splash-screen" class="screen active">
         <div class="splash-container">
-            <div class="falling-letters" id="falling-letters">
-                <span class="letter" style="--delay: 0">G</span>
-                <span class="letter" style="--delay: 1">A</span>
-                <span class="letter" style="--delay: 2">N</span>
-                <span class="letter" style="--delay: 3">G</span>
-                <span class="letter" style="--delay: 4">E</span>
-                <span class="letter letter-m" id="letter-m" style="--delay: 5">M</span>
-                <span class="letter" style="--delay: 6">E</span>
-                <span class="letter" style="--delay: 7">S</span>
-                <span class="letter" style="--delay: 8">T</span>
-                <span class="letter" style="--delay: 9">E</span>
-                <span class="letter" style="--delay: 10">R</span>
+            <div class="falling-letters-wrapper">
+                <div class="falling-letters" id="falling-letters-1">
+                    <span class="letter" style="--delay: 0">G</span>
+                    <span class="letter" style="--delay: 1">A</span>
+                    <span class="letter" style="--delay: 2">N</span>
+                    <span class="letter" style="--delay: 3">G</span>
+                    <span class="letter" style="--delay: 4">E</span>
+                </div>
+                <div class="falling-letters" id="falling-letters-2">
+                    <span class="letter" style="--delay: 5">M</span>
+                    <span class="letter" style="--delay: 6">E</span>
+                    <span class="letter" style="--delay: 7">S</span>
+                    <span class="letter" style="--delay: 8">T</span>
+                    <span class="letter" style="--delay: 9">E</span>
+                    <span class="letter" style="--delay: 10">R</span>
+                </div>
             </div>
             <div class="falling-crown" id="falling-crown">👑</div>
         </div>
@@ -80,9 +84,6 @@
                     <span class="card-medal"></span>
                     <span class="card-number">10</span>
                 </button>
-            </div>
-
-            <div class="group-cards">
                 <button class="group-card" data-range="1-5">
                     <span class="card-number">1-5</span>
                 </button>
@@ -141,10 +142,13 @@
                     <span class="stat-icon" id="medal-icon">🥉</span>
                     <span class="stat-text" id="medal-text">Bronsemedalje!</span>
                 </div>
+                <div class="stat-item record-time" id="record-stat" style="display: none;">
+                    <span class="record-text" id="record-text">🏆 Rekorttid!</span>
+                </div>
             </div>
 
             <button class="retry-btn" id="retry-btn">Prøv igjen</button>
-            <button class="menu-btn" id="menu-btn">Tilbake til meny</button>
+            <button class="menu-btn" id="menu-btn">🏠 Hjem</button>
         </div>
     </div>
 

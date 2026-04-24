@@ -431,13 +431,20 @@ function showQuestion() {
 
     questionEl.textContent = `${question.table} × ${question.multiplier} = ?`;
 
-    // Tøm og fokuser input
+    // Tøm input
     answerInput.value = '';
 
     // Scroll til toppen før fokus (iOS fix)
     window.scrollTo(0, 0);
 
+    // Fokuser input
     answerInput.focus();
+
+    // Scroll igjen etter kort delay (iOS Safari scroller etter focus)
+    setTimeout(() => {
+        window.scrollTo(0, 0);
+        quizScreen.scrollTop = 0;
+    }, 100);
 }
 
 function nextQuestion() {

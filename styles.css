@@ -329,7 +329,7 @@ body {
 /* Quiz-skjerm */
 #quiz-screen {
     min-height: 100vh;
-    padding: 50px 12px 12px 12px;
+    padding: 10px 12px 12px 12px;
     transition: background-color 0.3s ease;
     background: #F5F5F5;
 }
@@ -408,14 +408,14 @@ body {
 }
 
 .animal-icon {
-    font-size: 48px;
-    margin-bottom: 12px;
+    font-size: 40px;
+    margin-bottom: 8px;
 }
 
 .question {
-    font-size: 36px;
+    font-size: 32px;
     font-weight: 500;
-    margin-bottom: 18px;
+    margin-bottom: 12px;
     color: #2c3e50;
     line-height: 1.2;
 }

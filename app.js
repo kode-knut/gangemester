@@ -28,12 +28,26 @@ function getProgress() {
     const saved = localStorage.getItem('gangemester_progress');
     const progress = saved ? JSON.parse(saved) : {};
 
-    // Migrer gammel struktur (string) til ny struktur (object med modes)
+    // Migrer gammel struktur til ny struktur
     let needsMigration = false;
     for (const table in progress) {
+        // Gammel struktur: string
         if (typeof progress[table] === 'string') {
             const oldMedal = progress[table];
-            progress[table] = { ascending: oldMedal, mixed: null };
+            progress[table] = {
+                ascending: { medal: oldMedal, goldCount: 0 },
+                mixed: { medal: null, goldCount: 0 }
+            };
+            needsMigration = true;
+        }
+        // Halvgammel struktur: object med ascending/mixed som strings
+        else if (progress[table].ascending && typeof progress[table].ascending === 'string') {
+            const ascMedal = progress[table].ascending;
+            const mixMedal = progress[table].mixed;
+            progress[table] = {
+                ascending: { medal: ascMedal, goldCount: ascMedal === '🥇' ? 1 : 0 },
+                mixed: { medal: mixMedal, goldCount: mixMedal === '🥇' ? 1 : 0 }
+            };
             needsMigration = true;
         }
     }
@@ -51,15 +65,42 @@ function saveProgress(table, medal, mode) {
 
     // Initialiser tabell hvis den ikke finnes, eller konverter gammel struktur
     if (!progress[table] || typeof progress[table] === 'string') {
-        progress[table] = { ascending: null, mixed: null };
+        progress[table] = {
+            ascending: { medal: null, goldCount: 0 },
+            mixed: { medal: null, goldCount: 0 }
+        };
     }
 
-    // Kun lagre hvis ny medalje er bedre enn eksisterende
-    const currentMedal = progress[table][mode];
-    if (!currentMedal || getMedalValue(medal) > getMedalValue(currentMedal)) {
-        progress[table][mode] = medal;
-        localStorage.setItem('gangemester_progress', JSON.stringify(progress));
+    // Konverter gammel struktur (kun medalje) til ny struktur (medalje + goldCount)
+    if (progress[table][mode] && typeof progress[table][mode] === 'string') {
+        const oldMedal = progress[table][mode];
+        progress[table][mode] = { medal: oldMedal, goldCount: 0 };
     }
+
+    // Sørg for at struktur eksisterer
+    if (!progress[table][mode]) {
+        progress[table][mode] = { medal: null, goldCount: 0 };
+    }
+
+    const currentData = progress[table][mode];
+    const currentMedal = currentData.medal;
+
+    // Oppdater medalje hvis ny er bedre
+    if (!currentMedal || getMedalValue(medal) > getMedalValue(currentMedal)) {
+        progress[table][mode].medal = medal;
+    }
+
+    // Øk goldCount hvis dette er gull
+    if (medal === '🥇') {
+        progress[table][mode].goldCount = (currentData.goldCount || 0) + 1;
+
+        // Hvis 3 eller flere gull, oppgrader til krone
+        if (progress[table][mode].goldCount >= 3) {
+            progress[table][mode].medal = '👑';
+        }
+    }
+
+    localStorage.setItem('gangemester_progress', JSON.stringify(progress));
 }
 
 function getMedalValue(medal) {
@@ -108,16 +149,18 @@ function updateMedalDisplay() {
         const table = card.dataset.table;
         const medalEl = card.querySelector('.card-medal');
 
-        // Sjekk om begge moduser har gull - da vises krone
-        if (progress[table] &&
-            progress[table].ascending === '🥇' &&
-            progress[table].mixed === '🥇') {
-            medalEl.textContent = '👑';
-            medalEl.classList.add('show');
-        } else if (progress[table] && progress[table][currentMode]) {
-            // Vis kun medalje for valgt modus
-            medalEl.textContent = progress[table][currentMode];
-            medalEl.classList.add('show');
+        // Vis medalje for valgt modus
+        if (progress[table] && progress[table][currentMode]) {
+            const modeData = progress[table][currentMode];
+            // Håndter både ny struktur (object) og gammel struktur (string)
+            const medal = typeof modeData === 'string' ? modeData : modeData.medal;
+
+            if (medal) {
+                medalEl.textContent = medal;
+                medalEl.classList.add('show');
+            } else {
+                medalEl.classList.remove('show');
+            }
         } else {
             medalEl.classList.remove('show');
         }

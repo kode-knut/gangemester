@@ -20,7 +20,7 @@ Separate medaljer for Stigende og Blandet modus:
 - **🥉 Bronse**: God tid
 - **🥈 Sølv**: Rask tid
 - **🥇 Gull**: Meget rask tid
-- **👑 Krone**: Gull i BÅDE Stigende og Blandet modus
+- **👑 Krone**: Oppnå gullmedalje 3 ganger på samme tabell (per modus)
 
 Medaljegrenser er tilpasset vanskelighetsgrad:
 - Lette tabeller (1, 2, 5, 10): Gull ≤12s | Sølv ≤18s | Bronse ≤25s
@@ -33,11 +33,6 @@ Medaljegrenser er tilpasset vanskelighetsgrad:
 
 ### Design
 - Unike dyr for hver gangetabell
-- Fargerike bakgrunner per tabell
-- Rosa bakgrunn (🐙) for 1-5 gruppe
-- Blå bakgrunn (🦋) for 6-10 gruppe
-- Gull bakgrunn (👑) for full test
-- Confetti-animasjon ved medaljer
 - Auto-advance ved riktige svar
 
 ### PWA-funksjoner
@@ -53,29 +48,6 @@ Medaljegrenser er tilpasset vanskelighetsgrad:
 - Service Worker for offline-støtte
 - LocalStorage for fremgang og rekorder
 - Web App Manifest for PWA-installasjon
-
-## Kom i gang
-
-### Lokalt
-
-**Alternativ 1: Direkte i nettleser**
-```bash
-cd /Users/jannicke.husby@m10s.io/IdeaProjects/gangemester
-open index.html
-```
-
-**Alternativ 2: Med lokal server (anbefalt for PWA-testing)**
-```bash
-cd /Users/jannicke.husby@m10s.io/IdeaProjects/gangemester
-python3 -m http.server 8000
-```
-Åpne `http://localhost:8000`
-
-**Alternativ 3: VS Code Live Server**
-Høyreklikk på `index.html` → "Open with Live Server"
-
-### Produksjon
-Besøk: https://kode-knut.github.io/gangemester/
 
 ## Installere som app
 

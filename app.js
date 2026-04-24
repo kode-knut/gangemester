@@ -63,9 +63,11 @@ function saveProgress(table, medal, mode) {
 }
 
 function getMedalValue(medal) {
-    if (medal === '🥇') return 3;
-    if (medal === '🥈') return 2;
-    if (medal === '🥉') return 1;
+    if (medal === '👑') return 5;
+    if (medal === '🥇') return 4;
+    if (medal === '🥈') return 3;
+    if (medal === '🥉') return 2;
+    if (medal === '💭') return 1;
     return 0;
 }
 
@@ -106,8 +108,14 @@ function updateMedalDisplay() {
         const table = card.dataset.table;
         const medalEl = card.querySelector('.card-medal');
 
-        // Vis kun medalje for valgt modus
-        if (progress[table] && progress[table][currentMode]) {
+        // Sjekk om begge moduser har gull - da vises krone
+        if (progress[table] &&
+            progress[table].ascending === '🥇' &&
+            progress[table].mixed === '🥇') {
+            medalEl.textContent = '👑';
+            medalEl.classList.add('show');
+        } else if (progress[table] && progress[table][currentMode]) {
+            // Vis kun medalje for valgt modus
             medalEl.textContent = progress[table][currentMode];
             medalEl.classList.add('show');
         } else {
@@ -118,6 +126,7 @@ function updateMedalDisplay() {
 
 // Globale variabler
 let currentMode = 'ascending'; // 'ascending' eller 'mixed'
+let currentQuizType = 'single'; // 'single', 'group-1-5', 'group-6-10', 'full-test'
 let currentQuestions = [];
 let currentQuestionIndex = 0;
 let correctAnswers = 0;
@@ -262,6 +271,18 @@ function startQuiz(tables, questionCount = 10) {
     correctAnswers = 0;
     startTime = Date.now();
 
+    // Bestem quiz-type
+    if (questionCount === 50 && tables.length > 1) {
+        // Gruppe quiz
+        if (tables.includes(1) || tables.includes(2)) {
+            currentQuizType = 'group-1-5';
+        } else {
+            currentQuizType = 'group-6-10';
+        }
+    } else {
+        currentQuizType = 'single';
+    }
+
     showScreen('quiz');
     showQuestion();
 }
@@ -290,6 +311,7 @@ function startFullTest() {
     currentQuestionIndex = 0;
     correctAnswers = 0;
     startTime = Date.now();
+    currentQuizType = 'full-test';
 
     showScreen('quiz');
     showQuestion();
@@ -346,11 +368,24 @@ function showQuestion() {
     const progressPercent = ((currentQuestionIndex) / totalQuestions) * 100;
     progressBar.style.width = progressPercent + '%';
 
-    // Sett bakgrunnsfarge basert på gangetabell
-    quizScreen.className = 'screen active table-' + question.table;
+    // Sett bakgrunnsfarge basert på quiz-type
+    if (currentQuizType === 'single') {
+        quizScreen.className = 'screen active table-' + question.table;
+    } else {
+        quizScreen.className = 'screen active ' + currentQuizType;
+    }
 
-    // Vis dyr og spørsmål
-    animalIcon.textContent = tableConfig[question.table].animal;
+    // Vis emoji og spørsmål basert på quiz-type
+    if (currentQuizType === 'group-1-5') {
+        animalIcon.textContent = '🐙';
+    } else if (currentQuizType === 'group-6-10') {
+        animalIcon.textContent = '🦋';
+    } else if (currentQuizType === 'full-test') {
+        animalIcon.textContent = '👑';
+    } else {
+        animalIcon.textContent = tableConfig[question.table].animal;
+    }
+
     questionEl.textContent = `${question.table} × ${question.multiplier} = ?`;
 
     // Tøm og fokuser input
@@ -398,36 +433,79 @@ function showResults() {
         scoreCard.className = 'score-card perfect';
 
         // Bestem medalje basert på tid
-        let medal = '🥉';
-        let medalName = 'Bronsemedalje!';
+        let medal = '💭';
+        let medalName = 'Fullført!';
 
         if (totalQuestions === 10) {
-            // Enkelt tabell
-            if (elapsedTime < 30) {
+            // Enkelt tabell - forskjellige tider basert på vanskelighetsgrad
+            const table = selectedTables[0];
+            let goldTime, silverTime, bronzeTime;
+
+            if ([1, 2, 5, 10].includes(table)) {
+                // Lette tabeller
+                goldTime = 12;
+                silverTime = 18;
+                bronzeTime = 25;
+            } else if ([3, 4, 6, 8].includes(table)) {
+                // Medium tabeller
+                goldTime = 20;
+                silverTime = 28;
+                bronzeTime = 38;
+            } else {
+                // Vanskelige tabeller (7, 9)
+                goldTime = 25;
+                silverTime = 35;
+                bronzeTime = 45;
+            }
+
+            if (elapsedTime <= goldTime) {
                 medal = '🥇';
                 medalName = 'Gullmedalje!';
-            } else if (elapsedTime <= 40) {
+            } else if (elapsedTime <= silverTime) {
                 medal = '🥈';
                 medalName = 'Sølvmedalje!';
+            } else if (elapsedTime <= bronzeTime) {
+                medal = '🥉';
+                medalName = 'Bronsemedalje!';
             }
         } else if (totalQuestions === 50) {
             // Gruppe (1-5 eller 6-10)
-            if (elapsedTime < 150) {
-                medal = '🥇';
-                medalName = 'Gullmedalje!';
-            } else if (elapsedTime <= 210) {
-                medal = '🥈';
-                medalName = 'Sølvmedalje!';
+            const isEasyGroup = selectedTables.includes(1) || selectedTables.includes(2);
+
+            if (isEasyGroup) {
+                // 1-5 gangen
+                if (elapsedTime <= 90) {
+                    medal = '🥇';
+                    medalName = 'Gullmedalje!';
+                } else if (elapsedTime <= 130) {
+                    medal = '🥈';
+                    medalName = 'Sølvmedalje!';
+                } else if (elapsedTime <= 180) {
+                    medal = '🥉';
+                    medalName = 'Bronsemedalje!';
+                }
+            } else {
+                // 6-10 gangen
+                if (elapsedTime <= 120) {
+                    medal = '🥇';
+                    medalName = 'Gullmedalje!';
+                } else if (elapsedTime <= 170) {
+                    medal = '🥈';
+                    medalName = 'Sølvmedalje!';
+                } else if (elapsedTime <= 230) {
+                    medal = '🥉';
+                    medalName = 'Bronsemedalje!';
+                }
             }
         } else if (totalQuestions === 100) {
             // Full test (alle kombinasjoner)
-            if (elapsedTime < 300) {
+            if (elapsedTime <= 240) {
                 medal = '🥇';
                 medalName = 'Gullmedalje!';
-            } else if (elapsedTime <= 420) {
+            } else if (elapsedTime <= 350) {
                 medal = '🥈';
                 medalName = 'Sølvmedalje!';
-            } else if (elapsedTime <= 600) {
+            } else if (elapsedTime <= 500) {
                 medal = '🥉';
                 medalName = 'Bronsemedalje!';
             }
@@ -454,8 +532,10 @@ function showResults() {
         retryBtn.classList.remove('primary');
         menuBtn.classList.add('primary');
 
-        // Vis confetti
-        createConfetti();
+        // Vis confetti kun for medaljer (ikke for 💭)
+        if (medal !== '💭') {
+            createConfetti();
+        }
     } else {
         // Ikke perfekt
         celebrationIcon.textContent = '🤓';

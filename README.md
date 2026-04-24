@@ -23,9 +23,20 @@ Separate medaljer for Stigende og Blandet modus:
 - **👑 Krone**: Oppnå gullmedalje 3 ganger på samme tabell (per modus)
 
 Medaljegrenser er tilpasset vanskelighetsgrad:
+
+**Enkelttabeller (tidsbasert):**
 - Lette tabeller (1, 2, 5, 10): Gull ≤12s | Sølv ≤18s | Bronse ≤25s
 - Medium tabeller (3, 4, 6, 8): Gull ≤20s | Sølv ≤28s | Bronse ≤38s
 - Vanskelige tabeller (7, 9): Gull ≤25s | Sølv ≤35s | Bronse ≤45s
+
+**Grupper (tidsbasert):**
+- 1-5 gangen: Gull ≤90s | Sølv ≤130s | Bronse ≤180s
+- 6-10 gangen: Gull ≤120s | Sølv ≤170s | Bronse ≤230s
+
+**Test hele gangetabellen (feilbasert):**
+- Gull: 0 feil (100/100)
+- Sølv: Mindre enn 5 feil (96+/100)
+- Bronse: Mindre enn 11 feil (90+/100)
 
 ### Personlige rekorder
 - Beste tid lagres for hver tabell og modus

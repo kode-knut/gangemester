@@ -452,13 +452,7 @@ function showResults() {
     const percentage = Math.round((correctAnswers / totalQuestions) * 100);
     const elapsedTime = Math.round((Date.now() - startTime) / 1000);
     const isPerfect = correctAnswers === totalQuestions;
-
-    // Sjekk om det er rekorttid
-    let isNewRecord = false;
-    if (isPerfect) {
-        const timeKey = getTimeKey(selectedTables, totalQuestions, currentMode);
-        isNewRecord = saveBestTime(timeKey, elapsedTime);
-    }
+    const errors = totalQuestions - correctAnswers;
 
     // Oppdater resultattekster
     scoreBig.textContent = `${correctAnswers}/${totalQuestions}`;
@@ -468,16 +462,90 @@ function showResults() {
     // Hent score-card element
     const scoreCard = document.querySelector('.score-card');
 
-    if (isPerfect) {
-        // Perfekt score: 10/10
+    let medal = null;
+    let medalName = '';
+    let showConfetti = false;
+    let isNewRecord = false;
+
+    // Spesiallogikk for Full Test (100 spørsmål) - feilbasert
+    if (totalQuestions === 100) {
+        if (errors === 0) {
+            // Perfekt - gull
+            medal = '🥇';
+            medalName = 'Gullmedalje!';
+            celebrationIcon.textContent = '🎉';
+            const randomMessage = perfectMessages[Math.floor(Math.random() * perfectMessages.length)];
+            resultTitle.textContent = randomMessage;
+            scoreCard.className = 'score-card perfect';
+            showConfetti = true;
+
+            // Sjekk rekorttid kun ved perfekt
+            const timeKey = getTimeKey(selectedTables, totalQuestions, currentMode);
+            isNewRecord = saveBestTime(timeKey, elapsedTime);
+        } else if (errors < 5) {
+            // Mindre enn 5 feil - sølv
+            medal = '🥈';
+            medalName = 'Sølvmedalje!';
+            celebrationIcon.textContent = '🎉';
+            resultTitle.textContent = 'Kjempebra!';
+            scoreCard.className = 'score-card perfect';
+            showConfetti = true;
+        } else if (errors < 11) {
+            // Mindre enn 11 feil - bronse
+            medal = '🥉';
+            medalName = 'Bronsemedalje!';
+            celebrationIcon.textContent = '🎉';
+            resultTitle.textContent = 'Godt jobbet!';
+            scoreCard.className = 'score-card perfect';
+            showConfetti = true;
+        } else {
+            // For mange feil - ingen medalje
+            celebrationIcon.textContent = '🤓';
+            resultTitle.textContent = 'Godt forsøk!';
+            scoreCard.className = 'score-card not-perfect';
+        }
+
+        // Lagre fremgang for full test hvis medalje oppnådd
+        if (medal) {
+            // Full test lagres ikke per tabell, så vi kan bruke table "0" som placeholder
+            // Eller vi kan velge å ikke lagre det på kort, bare vise på resultatskjerm
+            medalIcon.textContent = medal;
+            medalText.textContent = medalName;
+        } else {
+            medalIcon.textContent = '';
+            medalText.textContent = '';
+        }
+
+        recordStat.style.display = isNewRecord ? 'block' : 'none';
+        if (isNewRecord) {
+            recordStat.classList.add('pulse');
+            recordText.textContent = '🏆 Rekorttid!';
+        }
+
+        // Knapper
+        if (medal) {
+            retryBtn.classList.remove('primary');
+            menuBtn.classList.add('primary');
+        } else {
+            retryBtn.classList.add('primary');
+            menuBtn.classList.remove('primary');
+        }
+    }
+    // Normal logikk for enkelttabeller og grupper - tidsbasert
+    else if (isPerfect) {
+        // Perfekt score: 10/10 eller 50/50
         const randomMessage = perfectMessages[Math.floor(Math.random() * perfectMessages.length)];
         celebrationIcon.textContent = '🎉';
         resultTitle.textContent = randomMessage;
         scoreCard.className = 'score-card perfect';
 
+        // Sjekk rekorttid
+        const timeKey = getTimeKey(selectedTables, totalQuestions, currentMode);
+        isNewRecord = saveBestTime(timeKey, elapsedTime);
+
         // Bestem medalje basert på tid
-        let medal = '💭';
-        let medalName = 'Fullført!';
+        medal = '💭';
+        medalName = 'Fullført!';
 
         if (totalQuestions === 10) {
             // Enkelt tabell - forskjellige tider basert på vanskelighetsgrad
@@ -540,18 +608,6 @@ function showResults() {
                     medalName = 'Bronsemedalje!';
                 }
             }
-        } else if (totalQuestions === 100) {
-            // Full test (alle kombinasjoner)
-            if (elapsedTime <= 240) {
-                medal = '🥇';
-                medalName = 'Gullmedalje!';
-            } else if (elapsedTime <= 350) {
-                medal = '🥈';
-                medalName = 'Sølvmedalje!';
-            } else if (elapsedTime <= 500) {
-                medal = '🥉';
-                medalName = 'Bronsemedalje!';
-            }
         }
 
         medalIcon.textContent = medal;
@@ -577,10 +633,10 @@ function showResults() {
 
         // Vis confetti kun for medaljer (ikke for 💭)
         if (medal !== '💭') {
-            createConfetti();
+            showConfetti = true;
         }
     } else {
-        // Ikke perfekt
+        // Ikke perfekt (for enkelttabeller og grupper)
         celebrationIcon.textContent = '🤓';
         resultTitle.textContent = 'Godt forsøk!';
         scoreCard.className = 'score-card not-perfect';
@@ -591,6 +647,11 @@ function showResults() {
         // Knapper: retry-btn er primary (blå), menu-btn er secondary (grå)
         retryBtn.classList.add('primary');
         menuBtn.classList.remove('primary');
+    }
+
+    // Vis confetti hvis det er fortjent
+    if (showConfetti) {
+        createConfetti();
     }
 
     showScreen('result');

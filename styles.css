@@ -329,7 +329,7 @@ body {
 /* Quiz-skjerm */
 #quiz-screen {
     min-height: 100vh;
-    padding: 30px 12px 12px 12px;
+    padding: 100px 12px 12px 12px;
     transition: background-color 0.3s ease;
     background: #F5F5F5;
 }
@@ -465,7 +465,7 @@ body {
 /* Resultatskjerm */
 #result-screen {
     min-height: 100vh;
-    padding: 30px 15px 15px 15px;
+    padding: 100px 15px 15px 15px;
 }
 
 .result-container {

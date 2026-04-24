@@ -1,10 +1,12 @@
-const CACHE_NAME = 'gangemester-v2';
+const CACHE_NAME = 'gangemester-v3';
 const urlsToCache = [
     './',
     './index.html',
     './styles.css',
     './app.js',
-    './manifest.json'
+    './manifest.json',
+    './icon-192.png',
+    './icon-512.png'
 ];
 
 // Installer service worker og cache filer

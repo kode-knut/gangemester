@@ -433,6 +433,10 @@ function showQuestion() {
 
     // Tøm og fokuser input
     answerInput.value = '';
+
+    // Scroll til toppen før fokus (iOS fix)
+    window.scrollTo(0, 0);
+
     answerInput.focus();
 }
 

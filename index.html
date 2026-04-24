@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Øv på gangetabellen">
+    <meta name="theme-color" content="#4285F4">
+    <title>Gangemester</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div id="splash-screen" class="screen active">
+        <div class="splash-container">
+            <div class="falling-letters" id="falling-letters">
+                <span class="letter" style="--delay: 0">G</span>
+                <span class="letter" style="--delay: 1">A</span>
+                <span class="letter" style="--delay: 2">N</span>
+                <span class="letter" style="--delay: 3">G</span>
+                <span class="letter" style="--delay: 4">E</span>
+                <span class="letter letter-m" id="letter-m" style="--delay: 5">M</span>
+                <span class="letter" style="--delay: 6">E</span>
+                <span class="letter" style="--delay: 7">S</span>
+                <span class="letter" style="--delay: 8">T</span>
+                <span class="letter" style="--delay: 9">E</span>
+                <span class="letter" style="--delay: 10">R</span>
+            </div>
+            <div class="falling-crown" id="falling-crown">👑</div>
+        </div>
+    </div>
+
+    <!-- Hovedmeny -->
+    <div id="menu-screen" class="screen active">
+        <div class="container">
+            <div class="tabs">
+                <button class="tab active" data-mode="ascending">↑ Stigende</button>
+                <button class="tab" data-mode="mixed">Blandet</button>
+            </div>
+
+            <div class="cards-grid">
+                <button class="number-card" data-table="1">
+                    <span class="card-medal"></span>
+                    <span class="card-number">1</span>
+                </button>
+                <button class="number-card" data-table="2">
+                    <span class="card-medal"></span>
+                    <span class="card-number">2</span>
+                </button>
+                <button class="number-card" data-table="3">
+                    <span class="card-medal"></span>
+                    <span class="card-number">3</span>
+                </button>
+                <button class="number-card" data-table="4">
+                    <span class="card-medal"></span>
+                    <span class="card-number">4</span>
+                </button>
+                <button class="number-card" data-table="5">
+                    <span class="card-medal"></span>
+                    <span class="card-number">5</span>
+                </button>
+                <button class="number-card" data-table="6">
+                    <span class="card-medal"></span>
+                    <span class="card-number">6</span>
+                </button>
+                <button class="number-card" data-table="7">
+                    <span class="card-medal"></span>
+                    <span class="card-number">7</span>
+                </button>
+                <button class="number-card" data-table="8">
+                    <span class="card-medal"></span>
+                    <span class="card-number">8</span>
+                </button>
+                <button class="number-card" data-table="9">
+                    <span class="card-medal"></span>
+                    <span class="card-number">9</span>
+                </button>
+                <button class="number-card" data-table="10">
+                    <span class="card-medal"></span>
+                    <span class="card-number">10</span>
+                </button>
+            </div>
+
+            <div class="group-cards">
+                <button class="group-card" data-range="1-5">
+                    <span class="card-number">1-5</span>
+                </button>
+                <button class="group-card" data-range="6-10">
+                    <span class="card-number">6-10</span>
+                </button>
+            </div>
+
+            <button class="full-test-card" data-fulltest="true">
+                <span class="crown">👑</span>
+                <div class="test-info">
+                    <div class="test-title">Test hele gangetabellen</div>
+                </div>
+            </button>
+        </div>
+    </div>
+
+    <!-- Quiz-skjerm -->
+    <div id="quiz-screen" class="screen">
+        <div class="quiz-container">
+            <div class="quiz-header">
+                <button class="back-btn" id="cancel-btn">← Avbryt</button>
+                <div class="progress-text" id="progress-text">Oppgave 1 av 10</div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+
+            <div class="question-card">
+                <div class="animal-icon" id="animal-icon">🐶</div>
+                <div class="question" id="question">1 × 1 = ?</div>
+                <input type="number" class="answer-input" id="answer-input" placeholder="" inputmode="numeric">
+                <button class="skip-btn" id="skip-btn">Hopp over</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resultatskjerm -->
+    <div id="result-screen" class="screen">
+        <div class="result-container">
+            <div class="celebration-icon" id="celebration-icon">🎉</div>
+            <h1 class="result-title" id="result-title">Fantastisk!</h1>
+
+            <div class="score-card">
+                <div class="score-big" id="score-big">10/10</div>
+                <div class="score-label">riktige svar</div>
+                <div class="score-percent" id="score-percent">100%</div>
+            </div>
+
+            <div class="stats-card">
+                <div class="stat-item">
+                    <span class="stat-icon">⏱️</span>
+                    <span class="stat-text" id="time-stat">Tid: 120 sekunder</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-icon" id="medal-icon">🥉</span>
+                    <span class="stat-text" id="medal-text">Bronsemedalje!</span>
+                </div>
+            </div>
+
+            <button class="retry-btn" id="retry-btn">Prøv igjen</button>
+            <button class="menu-btn" id="menu-btn">Tilbake til meny</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

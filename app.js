@@ -203,8 +203,6 @@ const medalIcon = document.getElementById('medal-icon');
 const medalText = document.getElementById('medal-text');
 const recordStat = document.getElementById('record-stat');
 const recordText = document.getElementById('record-text');
-const nearMissStat = document.getElementById('near-miss-stat');
-const nearMissText = document.getElementById('near-miss-text');
 const retryBtn = document.getElementById('retry-btn');
 const menuBtn = document.getElementById('menu-btn');
 
@@ -534,9 +532,6 @@ function showResults() {
             recordText.textContent = '🏆 Rekorttid!';
         }
 
-        // Skjul near-miss for full test (den er feilbasert, ikke tidsbasert)
-        nearMissStat.style.display = 'none';
-
         // Knapper
         if (medal) {
             retryBtn.classList.remove('primary');
@@ -628,62 +623,6 @@ function showResults() {
         medalIcon.textContent = medal || '';
         medalText.textContent = medalName;
 
-        // Beregn hvor nære neste medalje (kun for tidsbaserte tester)
-        let nextMedalTime = null;
-        let nextMedalName = '';
-
-        if (totalQuestions === 10) {
-            const table = selectedTables[0];
-            let goldTime, silverTime, bronzeTime;
-
-            if ([1, 2, 5, 10].includes(table)) {
-                goldTime = 12; silverTime = 18; bronzeTime = 25;
-            } else if ([3, 4, 6, 8].includes(table)) {
-                goldTime = 20; silverTime = 28; bronzeTime = 38;
-            } else {
-                goldTime = 25; silverTime = 35; bronzeTime = 45;
-            }
-
-            if (medal === '🥈') {
-                nextMedalTime = goldTime;
-                nextMedalName = 'gull';
-            } else if (medal === '🥉') {
-                nextMedalTime = silverTime;
-                nextMedalName = 'sølv';
-            } else if (!medal) {
-                nextMedalTime = bronzeTime;
-                nextMedalName = 'bronse';
-            }
-        } else if (totalQuestions === 20) {
-            const isEasyGroup = selectedTables.includes(1) || selectedTables.includes(2);
-            let goldTime, silverTime, bronzeTime;
-
-            if (isEasyGroup) {
-                goldTime = 35; silverTime = 50; bronzeTime = 70;
-            } else {
-                goldTime = 50; silverTime = 70; bronzeTime = 90;
-            }
-
-            if (medal === '🥈') {
-                nextMedalTime = goldTime;
-                nextMedalName = 'gull';
-            } else if (medal === '🥉') {
-                nextMedalTime = silverTime;
-                nextMedalName = 'sølv';
-            } else if (!medal) {
-                nextMedalTime = bronzeTime;
-                nextMedalName = 'bronse';
-            }
-        }
-
-        // Vis neste medalje-mål
-        if (nextMedalTime && elapsedTime > nextMedalTime) {
-            nearMissText.textContent = `Klare på ≤${nextMedalTime}s for ${nextMedalName}`;
-            nearMissStat.style.display = 'block';
-        } else {
-            nearMissStat.style.display = 'none';
-        }
-
         // Vis rekorttid hvis aktuelt
         if (isNewRecord) {
             recordStat.style.display = 'block';
@@ -714,7 +653,6 @@ function showResults() {
         medalIcon.textContent = '';
         medalText.textContent = '';
         recordStat.style.display = 'none';
-        nearMissStat.style.display = 'none';
 
         // Knapper: retry-btn er primary (blå), menu-btn er secondary (grå)
         retryBtn.classList.add('primary');

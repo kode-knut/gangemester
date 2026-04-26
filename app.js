@@ -108,7 +108,6 @@ function getMedalValue(medal) {
     if (medal === '🥇') return 4;
     if (medal === '🥈') return 3;
     if (medal === '🥉') return 2;
-    if (medal === '💭') return 1;
     return 0;
 }
 
@@ -135,7 +134,7 @@ function getTimeKey(tables, questionCount, mode) {
     let baseKey;
     if (questionCount === 100) {
         baseKey = 'full-test';
-    } else if (questionCount === 50) {
+    } else if (questionCount === 20) {
         baseKey = tables.length > 1 ? `group-${tables[0]}-${tables[tables.length - 1]}` : `table-${tables[0]}`;
     } else {
         baseKey = `table-${tables[0]}`;
@@ -204,6 +203,8 @@ const medalIcon = document.getElementById('medal-icon');
 const medalText = document.getElementById('medal-text');
 const recordStat = document.getElementById('record-stat');
 const recordText = document.getElementById('record-text');
+const nearMissStat = document.getElementById('near-miss-stat');
+const nearMissText = document.getElementById('near-miss-text');
 const retryBtn = document.getElementById('retry-btn');
 const menuBtn = document.getElementById('menu-btn');
 
@@ -232,7 +233,7 @@ groupCards.forEach(card => {
         for (let i = start; i <= end; i++) {
             tables.push(i);
         }
-        startQuiz(tables, 50);
+        startQuiz(tables, 20);
     });
 });
 
@@ -315,7 +316,7 @@ function startQuiz(tables, questionCount = 10) {
     startTime = Date.now();
 
     // Bestem quiz-type
-    if (questionCount === 50 && tables.length > 1) {
+    if (questionCount === 20 && tables.length > 1) {
         // Gruppe quiz
         if (tables.includes(1) || tables.includes(2)) {
             currentQuizType = 'group-1-5';
@@ -533,6 +534,9 @@ function showResults() {
             recordText.textContent = '🏆 Rekorttid!';
         }
 
+        // Skjul near-miss for full test (den er feilbasert, ikke tidsbasert)
+        nearMissStat.style.display = 'none';
+
         // Knapper
         if (medal) {
             retryBtn.classList.remove('primary');
@@ -544,7 +548,7 @@ function showResults() {
     }
     // Normal logikk for enkelttabeller og grupper - tidsbasert
     else if (isPerfect) {
-        // Perfekt score: 10/10 eller 50/50
+        // Perfekt score: 10/10 eller 20/20
         const randomMessage = perfectMessages[Math.floor(Math.random() * perfectMessages.length)];
         celebrationIcon.textContent = '🎉';
         resultTitle.textContent = randomMessage;
@@ -554,9 +558,9 @@ function showResults() {
         const timeKey = getTimeKey(selectedTables, totalQuestions, currentMode);
         isNewRecord = saveBestTime(timeKey, elapsedTime);
 
-        // Bestem medalje basert på tid
-        medal = '💭';
-        medalName = 'Fullført!';
+        // Bestem medalje basert på tid (null hvis ikke god nok tid)
+        medal = null;
+        medalName = '';
 
         if (totalQuestions === 10) {
             // Enkelt tabell - forskjellige tider basert på vanskelighetsgrad
@@ -590,39 +594,95 @@ function showResults() {
                 medal = '🥉';
                 medalName = 'Bronsemedalje!';
             }
-        } else if (totalQuestions === 50) {
+        } else if (totalQuestions === 20) {
             // Gruppe (1-5 eller 6-10)
             const isEasyGroup = selectedTables.includes(1) || selectedTables.includes(2);
 
             if (isEasyGroup) {
-                // 1-5 gangen
-                if (elapsedTime <= 90) {
+                // 1-5 gangen (20 spørsmål)
+                if (elapsedTime <= 35) {
                     medal = '🥇';
                     medalName = 'Gullmedalje!';
-                } else if (elapsedTime <= 130) {
+                } else if (elapsedTime <= 50) {
                     medal = '🥈';
                     medalName = 'Sølvmedalje!';
-                } else if (elapsedTime <= 180) {
+                } else if (elapsedTime <= 70) {
                     medal = '🥉';
                     medalName = 'Bronsemedalje!';
                 }
             } else {
-                // 6-10 gangen
-                if (elapsedTime <= 120) {
+                // 6-10 gangen (20 spørsmål)
+                if (elapsedTime <= 50) {
                     medal = '🥇';
                     medalName = 'Gullmedalje!';
-                } else if (elapsedTime <= 170) {
+                } else if (elapsedTime <= 70) {
                     medal = '🥈';
                     medalName = 'Sølvmedalje!';
-                } else if (elapsedTime <= 230) {
+                } else if (elapsedTime <= 90) {
                     medal = '🥉';
                     medalName = 'Bronsemedalje!';
                 }
             }
         }
 
-        medalIcon.textContent = medal;
+        medalIcon.textContent = medal || '';
         medalText.textContent = medalName;
+
+        // Beregn hvor nære neste medalje (kun for tidsbaserte tester)
+        let nextMedalTime = null;
+        let nextMedalName = '';
+
+        if (totalQuestions === 10) {
+            const table = selectedTables[0];
+            let goldTime, silverTime, bronzeTime;
+
+            if ([1, 2, 5, 10].includes(table)) {
+                goldTime = 12; silverTime = 18; bronzeTime = 25;
+            } else if ([3, 4, 6, 8].includes(table)) {
+                goldTime = 20; silverTime = 28; bronzeTime = 38;
+            } else {
+                goldTime = 25; silverTime = 35; bronzeTime = 45;
+            }
+
+            if (medal === '🥈') {
+                nextMedalTime = goldTime;
+                nextMedalName = 'gull';
+            } else if (medal === '🥉') {
+                nextMedalTime = silverTime;
+                nextMedalName = 'sølv';
+            } else if (!medal) {
+                nextMedalTime = bronzeTime;
+                nextMedalName = 'bronse';
+            }
+        } else if (totalQuestions === 20) {
+            const isEasyGroup = selectedTables.includes(1) || selectedTables.includes(2);
+            let goldTime, silverTime, bronzeTime;
+
+            if (isEasyGroup) {
+                goldTime = 35; silverTime = 50; bronzeTime = 70;
+            } else {
+                goldTime = 50; silverTime = 70; bronzeTime = 90;
+            }
+
+            if (medal === '🥈') {
+                nextMedalTime = goldTime;
+                nextMedalName = 'gull';
+            } else if (medal === '🥉') {
+                nextMedalTime = silverTime;
+                nextMedalName = 'sølv';
+            } else if (!medal) {
+                nextMedalTime = bronzeTime;
+                nextMedalName = 'bronse';
+            }
+        }
+
+        // Vis neste medalje-mål
+        if (nextMedalTime && elapsedTime > nextMedalTime) {
+            nearMissText.textContent = `Klare på ≤${nextMedalTime}s for ${nextMedalName}`;
+            nearMissStat.style.display = 'block';
+        } else {
+            nearMissStat.style.display = 'none';
+        }
 
         // Vis rekorttid hvis aktuelt
         if (isNewRecord) {
@@ -633,8 +693,8 @@ function showResults() {
             recordStat.style.display = 'none';
         }
 
-        // Lagre fremgang hvis enkelt tabell
-        if (selectedTables.length === 1) {
+        // Lagre fremgang hvis enkelt tabell OG medalje oppnådd
+        if (selectedTables.length === 1 && medal) {
             saveProgress(selectedTables[0], medal, currentMode);
         }
 
@@ -642,8 +702,8 @@ function showResults() {
         retryBtn.classList.remove('primary');
         menuBtn.classList.add('primary');
 
-        // Vis confetti kun for medaljer (ikke for 💭)
-        if (medal !== '💭') {
+        // Vis confetti kun for medaljer
+        if (medal) {
             showConfetti = true;
         }
     } else {
@@ -654,6 +714,7 @@ function showResults() {
         medalIcon.textContent = '';
         medalText.textContent = '';
         recordStat.style.display = 'none';
+        nearMissStat.style.display = 'none';
 
         // Knapper: retry-btn er primary (blå), menu-btn er secondary (grå)
         retryBtn.classList.add('primary');
